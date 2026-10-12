@@ -944,9 +944,14 @@ begin
         on E: Exception do
         begin
           // [SEC-31] Log internally; NEVER leak stack or detail to client
-          System.WriteLn(ErrOutput,
-            Format('[HorseMormot] Pipeline exception %s: %s',
-              [E.ClassName, E.Message]));
+          // [FIX-MORMOT-NOCONSOLE] Only a console process has an ErrOutput.
+          // In a VCL, LCL or service host (IsConsole = False) this WriteLn
+          // raised EInOutError 105 from INSIDE this handler, so the 500
+          // below was never set and the client got "I/O error 105".
+          if IsConsole then
+            System.WriteLn(ErrOutput,
+              Format('[HorseMormot] Pipeline exception %s: %s',
+                [E.ClassName, E.Message]));
           {$IFDEF HORSE_MORMOT_TRACE}
           Trace(Format('ROUTE-EXCEPTION %s: %s', [E.ClassName, E.Message]));
           {$ENDIF}
