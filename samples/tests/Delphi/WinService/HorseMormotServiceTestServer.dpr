@@ -40,7 +40,7 @@ uses
   MyHorseMormotService in 'MyHorseMormotService.pas' {HorseMormotTestService: TService},
   Horse.Mormot.TestRoutes in '..\..\Common\Horse.Mormot.TestRoutes.pas',
   Horse.Provider.Mormot.Config in '..\..\..\..\src\Horse.Provider.Mormot.Config.pas',
-  Horse.Provider.Mormot.Daemon in '..\..\..\..\src\Horse.Provider.Mormot.Daemon.pas',
+  Horse.Provider.Mormot.Daemon in '..\..\..\..\src\Horse.Provider.Mormot.Daemon.pas' {HorseMormotService: TService},
   Horse.Provider.Mormot in '..\..\..\..\src\Horse.Provider.Mormot.pas',
   Horse.Provider.Mormot.Pool in '..\..\..\..\src\Horse.Provider.Mormot.Pool.pas',
   Horse.Provider.Mormot.RawRequest in '..\..\..\..\src\Horse.Provider.Mormot.RawRequest.pas',

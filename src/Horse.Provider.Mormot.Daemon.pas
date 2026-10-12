@@ -14,7 +14,9 @@ unit Horse.Provider.Mormot.Daemon;
                          ServiceStop  → THorse.StopListen + drain.
                          Use:  type TMyService = class(THorseMormotService);
                          Implements GetServiceController (SVC-CTRL-2), so a
-                         descendant needs no override of its own.
+                         descendant needs no override of its own. Has its own
+                         .dfm (SVC-DFM-1): list this unit in the app's .dpr
+                         as {HorseMormotService: TService}.
 
     {$ELSE}              THorseMormotLinuxDaemonApp
                          Static helper class.  Run() installs POSIX signal
@@ -103,6 +105,17 @@ uses
   Horse;
 
 {$IFDEF MSWINDOWS}
+
+// SVC-DFM-1 (2026-10-11): THorseMormotService carries its own .dfm
+// (Horse.Provider.Mormot.Daemon.dfm, no DisplayName so existing services keep
+// theirs). A service app lists this unit in its .dpr with the module comment
+//   Horse.Provider.Mormot.Daemon in '...' {HorseMormotService: TService},
+// and the IDE then designs a class(THorseMormotService) descendant as a SERVICE.
+// Without that line the IDE treats it as a form, refuses DisplayName and rewrites
+// the descendant's .dfm with Margins/ClientHeight/Font, which then fails at start
+// with EReadError. The descendant's .dfm root is 'object' (the IDE's own choice).
+// At run time this resource is streamed first, then the descendant's.
+{$R *.dfm}
 
 var
   // SVC-CTRL-2: the service this process hosts. Written on the main thread

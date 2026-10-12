@@ -1,4 +1,4 @@
-unit MyHorseMormotService;
+﻿unit MyHorseMormotService;
 
 interface
 
@@ -47,7 +47,7 @@ implementation
 uses
   System.IOUtils, System.SyncObjs;
 
-{%CLASSGROUP 'Vcl.Controls.TControl'}
+{%CLASSGROUP 'System.Classes.TPersistent'}
 
 {$R *.dfm}
 
