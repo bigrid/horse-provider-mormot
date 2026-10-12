@@ -124,6 +124,19 @@ begin
   AWriter.Write('SENDSTREAM-PART-2');
 end;
 
+// [FIX-MORMOT-NOCONSOLE probe] GET /diag/raise must raise from an onRequest
+// hook, not a route: Horse's route catch answers the exception itself, so a
+// route-level raise never reaches the provider's pipeline catch. The provider
+// must then answer 500 {"error":"Internal Server Error"}. In a VCL or service
+// host that failed with "I/O error 105" until the provider guarded its console
+// write. A unit-scope procedure, the form FPC accepts for Horse callbacks.
+procedure DiagRaiseHook(AReq: THorseRequest; ARes: THorseResponse; ANext: TNextProc);
+begin
+  if SameText(AReq.PathInfo, '/diag/raise') then
+    raise Exception.Create('DIAG-RAISE-DELIBERATE');
+  ANext();
+end;
+
 procedure RegisterTestRoutes;
 begin
 
@@ -505,6 +518,28 @@ begin
     begin
       Res.ContentType('application/json; charset=utf-8')
          .Send(DecodeReport(Req.ContentFields));
+    end
+  );
+
+  // ── Diagnostics (manual probes; the client does not call them) ────────────
+  THorse.AddOnRequest(DiagRaiseHook);
+
+  // Reached only if the hook did NOT fire.
+  THorse.Get('/diag/raise',
+    procedure(Req: THorseRequest; Res: THorseResponse)
+    begin
+      Res.ContentType('application/json; charset=utf-8')
+         .Send('{"raised":false,"error":"onRequest hook did not fire"}');
+    end
+  );
+
+  // PROVIDER-PROBE-1: the provider class THorse resolved to. A shape whose
+  // project sets no provider define runs on Horse's Indy default.
+  THorse.Get('/diag/provider',
+    procedure(Req: THorseRequest; Res: THorseResponse)
+    begin
+      Res.ContentType('application/json; charset=utf-8')
+         .Send(Format('{"provider":"%s"}', [JE(THorse.ClassParent.ClassName)]));
     end
   );
 
