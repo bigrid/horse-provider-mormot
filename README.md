@@ -4,7 +4,7 @@ mORMot2 transport provider for the [Horse](https://github.com/HashLoad/horse) we
 
 ## Status
 
-> **Working provider, released.** Currently **v1.0.17**. Requests, cookies, multipart,
+> **Working provider, released.** Currently **v1.0.18**. Requests, cookies, multipart,
 > `SendFile`/`Download`, `Req.RawWebRequest`/`Res.RawWebResponse`, TLS/mTLS and graceful
 > shutdown all work; the integration suite runs 131/131 on Delphi / Windows on both socket
 > backends (thread pool and async) with a current mORMot2. The http.sys backend has limits
@@ -363,14 +363,37 @@ To confirm the transport, `curl -sI` a route: this provider answers with
   The base form has no `.dfm`, so your form's `.dfm` must start with `object`, not
   `inherited` (otherwise the IDE reports *Ancestor for 'TfrmHorseMormotVCLHost' not
   found*).
-- **Windows service** — descend your service from `THorseMormotService`
-  (`Horse.Provider.Mormot.Daemon`) and register routes in its `OnCreate`. Since v1.0.17
-  the base class implements `GetServiceController` (SVC-CTRL-2). Before that, a
-  service that did not declare the override itself died at every `sc start` with SCM
-  error 1067, and nothing was logged. One service per process.
+- **Windows service:** descend your service from `THorseMormotService`
+  (`Horse.Provider.Mormot.Daemon`) and register routes in its `OnCreate`.
+  - Since v1.0.17 the base class implements `GetServiceController` (SVC-CTRL-2).
+    Before that, a service that did not declare the override itself died at every
+    `sc start` with SCM error 1067, and nothing was logged.
+  - One service per process.
+  - Since v1.0.18 the base class has its own `.dfm` (SVC-DFM-1), and **your `.dpr`
+    must list the Daemon unit with a module comment**, so that the IDE designs your
+    unit as a service:
+    ```pascal
+    uses
+      Vcl.SvcMgr,
+      Horse.Provider.Mormot.Daemon in '<path>\Horse.Provider.Mormot.Daemon.pas' {HorseMormotService: TService},
+      MyService in 'MyService.pas' {MyHorseService: TService};
+    ```
+  - Without that line the IDE opens your service as a **form**: "Property
+    DisplayName does not exist". Choosing *Ignore* saves a form `.dfm`
+    (`Margins`, `ClientHeight`, `Font`) that fails at start with `EReadError`, so
+    answer **Cancel**.
+  - Your service `.dfm` starts with `inherited` and lists only what differs from
+    the base. That is what the IDE's own *Inheritable Items* wizard writes. With
+    `object` the IDE falls back to the form designer. Both units need `: TService`
+    in the `.dpr`; the IDE's *Add to Project* drops it.
+  - Keep `HorseMormotService` out of *Project Options > Forms > Auto-create*: only
+    your service is created.
 
 Measured 2026-10-09 (Windows / Delphi 12, Win64, thread pool, the `samples/tests`
-VCL and WinService servers): **131/131 each**. The service ran under the SCM, and
+VCL and WinService servers): **131/131 each**.
+The `.dpr` module-comment mechanism was validated on 2026-10-11 with a minimal
+service project, including a negative control (without the line, the IDE fell back
+to the form designer). The service ran under the SCM, and
 `sc stop` drained and released the port. The Linux daemon, Lazarus LCL and FPC
 HTTPApplication shapes have **no recorded run yet**.
 
@@ -391,6 +414,7 @@ src/
 ├── Horse.Provider.Mormot.WebResponseAdapter.pas  TMormotWebResponse (thin subclass)
 ├── Horse.Provider.Mormot.VCL.pas                  TfrmHorseMormotVCLHost + Delphi VCL marker
 ├── Horse.Provider.Mormot.Daemon.pas               Delphi cross-platform daemon (Windows TService with GetServiceController / POSIX signals)
+├── Horse.Provider.Mormot.Daemon.dfm               base service module resource (SVC-DFM-1; list the unit in the .dpr)
 ├── Horse.Provider.Mormot.FPC.Daemon.pas           FPC Linux daemon (fpSignal handlers)
 ├── Horse.Provider.Mormot.FPC.LCL.pas              Lazarus LCL host form
 └── Horse.Provider.Mormot.FPC.HTTPApplication.pas  FPC HTTPApplication-style runner
