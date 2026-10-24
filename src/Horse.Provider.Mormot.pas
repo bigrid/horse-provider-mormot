@@ -1026,4 +1026,18 @@ initialization
   // value on every transport.
   RemoteIPLocalHostAsVoidInServers := False;
 
+finalization
+  // [FIX-MORMOT-SHUTDOWN-1] Safety net for a process that exits WITHOUT calling
+  // StopListen - common in a GUI (VCL/LCL) app whose close path forgot it, or a
+  // console app torn down mid-Listen (HashLoad/horse #576). An abandoned server
+  // leaves its mORMot worker threads running while the RTL finalizes units: on
+  // FPC with heaptrc that corrupts the exit heap dump (an EAccessViolation
+  // mid-dump, right after "NNN memory blocks allocated"), and in every build it
+  // leaks the server + its thread pool + handler + drain event. This section
+  // runs BEFORE the mORMot units finalize (reverse of initialization order), so
+  // Stop - which frees the server and JOINS its threads - is safe here. Stop is
+  // idempotent: a no-op when StopListen already ran (FServer = nil).
+  if Assigned(THorseProviderMormot.FServer) then
+    THorseProviderMormot.Stop;
+
 end.

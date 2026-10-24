@@ -63,8 +63,8 @@ begin
   inherited Create(TheOwner);
   FPort      := 9000;
   FAutoStart := True;
-  OnCreate   := @DoFormCreate;
-  OnClose    := @DoFormClose;
+  OnCreate   := DoFormCreate;   // FPC {$MODE DELPHI}: method -> event takes NO @ (the @ form is objfpc; FPC 3.2.2 rejects it with error 4004 "Variable identifier expected")
+  OnClose    := DoFormClose;
 end;
 
 destructor TfrmHorseMormotLCLHost.Destroy;
