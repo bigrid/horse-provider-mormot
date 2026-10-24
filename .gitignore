@@ -41,3 +41,5 @@ CLAUDE.md
 # TLS test build output (build-tls-dcc.bat)
 tests/bin/
 tests/temp/
+tests/HorseICSTLSTestServer.dproj
+tests/HorseICSTLSTestServer.deployproj

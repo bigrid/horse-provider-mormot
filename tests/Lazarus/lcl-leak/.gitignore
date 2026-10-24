@@ -1,0 +1,15 @@
+# Build + run artifacts - commit only the sources (.lpr .pas .lpi .ps1 .bat README.md)
+*.exe
+*.o
+*.ppu
+*.a
+*.res
+*.compiled
+*.dbg
+lib/
+backup/
+# heaptrc + run logs produced by run-lcl-leak
+issue.log
+fixed.log
+cycles.log
+lcl-leak-run.log
